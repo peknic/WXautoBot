@@ -7,23 +7,18 @@ import json
 from paddleocr import PaddleOCR
 import cv2
 import numpy as np
-
+import pygetwindow as gw
 #初始化paddleocr
 ocr = PaddleOCR(
     lang="ch",       # 中文
     use_angle_cls=True,
     show_log=False
 )
-# ==============================
-# 1 Tesseract路径
-# ==============================
-
 filepath=r"C:\MSWBID\python\projects\wxbot\history.json" #对话历史
-
-# ==============================
-# 2 获取微信窗口
-# ==============================
-
+def focus_window():
+    win = gw.getWindowsWithTitle('微信')[0]
+    if win:
+        win.activate()
 # 获取所有窗口对象
 def get_all_windows_title():#获取所有窗口的标题
     all_windows = gw.getAllWindows()
@@ -37,7 +32,6 @@ def get_all_windows_title():#获取所有窗口的标题
     #         # 如果你想看更多信息，可以取消下面这行的注释
     #         print(f"  位置: ({win.left}, {win.top}), 尺寸: {win.width}x{win.height}")
     return all_windows
-
 def find_windows(windows,target_window):#看看设定的目标窗口是否在已打开的窗口里面，返回T/F
     match=0
     for win in windows:
@@ -49,7 +43,6 @@ def find_windows(windows,target_window):#看看设定的目标窗口是否在已
         return True
     else:
         return False
-
 def get_4mouse_position():
     time.sleep(3)
     positions=[]
@@ -58,7 +51,6 @@ def get_4mouse_position():
         positions.append(pyautogui.position())
         print(positions[i],"record")
     print(positions)
-
 def get_wechat_window():
 
     windows = gw.getWindowsWithTitle("微信")
@@ -68,12 +60,9 @@ def get_wechat_window():
         return None
 
     return windows[0]
-
-
 # ==============================
 # 3 计算聊天区域
 # ==============================
-
 def get_chat_region():
 
     win = get_wechat_window()
@@ -114,11 +103,9 @@ def check_chat_region():#通过鼠标移动来查看聊天框位置
     time.sleep(1)
     pyautogui.moveTo(get_chat_region()[2], get_chat_region()[3], duration=1)
     time.sleep(1)
-
 # ==============================
 # 4 获取最后消息坐标
 # ==============================
-
 # def get_last_message_pos():
 #
 #     win = get_wechat_window()
@@ -132,12 +119,9 @@ def check_chat_region():#通过鼠标移动来查看聊天框位置
 #     y = top + int(height * 0.75)
 #
 #     return (x, y)
-
-
 # ==============================
 # 5 截图
 # ==============================
-
 def capture_region():
 
     region = get_chat_region()
@@ -149,12 +133,9 @@ def capture_region():
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     # img.show()
     return img
-
-
 # ==============================
 # 6 OCR识别
 # ==============================
-
 def ocr_image(img):
     """
     使用PaddleOCR识别图片并返回字符串
@@ -183,11 +164,9 @@ def ocr_image(img):
         texts.append(text)
     # print("\n".join(texts))
     return "\n".join(texts)
-
 # ==============================
 # 7 复制消息
 # ==============================
-
 def copy_message():
 
     # x, y = get_last_message_pos()
@@ -209,18 +188,15 @@ def copy_message():
     if find_windows(get_all_windows_title(),"图片"):
         pyautogui.keyDown("esc")
     return pyperclip.paste()
-
-
 # ==============================
 # 8 主循环
 # ==============================
-
 def listen_loop(history_len):
 
     last_text = ""
 
     print("开始监听微信消息...")
-
+    focus_window()
     while True:
         msg_history = read_file(filepath)
 
@@ -249,21 +225,16 @@ def listen_loop(history_len):
             print("当前消息历史",msg_history)
             write_file(filepath,rearrange_file(msg_history,history_len))
         time.sleep(0.5)
-
-
 def write_file(file_path,messages):
     # 保存到文件
     with open(file_path, "w+", encoding="utf-8") as f:
         json.dump(messages, f, ensure_ascii=False)
-
-
 def read_file(file_path):
     # 读取回列表
     with open(file_path, "r", encoding="utf-8") as f:
         loaded_messages = json.load(f)
 
     return loaded_messages
-
 def rearrange_file(msg,depth):
     while True:
         if len(msg)>depth:
@@ -275,6 +246,6 @@ def rearrange_file(msg,depth):
 # 9 程序入口
 # ==============================
 if __name__ == "__main__":
-    listen_loop(3)
+    listen_loop(10)
     # print(ocr_image(r"C:\Users\qingu\OneDrive\Pictures\Screenshots\231.png"))
     # check_chat_region()

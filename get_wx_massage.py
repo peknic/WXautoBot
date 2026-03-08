@@ -15,6 +15,9 @@ ocr = PaddleOCR(
     show_log=False
 )
 filepath=r"C:\MSWBID\python\projects\wxbot\history.json" #对话历史
+#创捷对话历史文件
+with open(filepath, "w+", encoding="utf-8") as f:
+    json.dump([{"role":"user","content":"init"}], f, ensure_ascii=False)
 def focus_window():
     win = gw.getWindowsWithTitle('微信')[0]
     if win:
@@ -212,7 +215,7 @@ def listen_loop(history_len):
 
             print("检测到消息变化")
 
-            msg = copy_message()
+            msg = {"role":"user","content":copy_message()}
 
             print("新消息:", msg)
             try:

@@ -1,22 +1,55 @@
 import time
-import pytesseract
 from PIL import ImageGrab
 import pyautogui
 import pygetwindow as gw
 import pyperclip
 import json
+from paddleocr import PaddleOCR
+import cv2
+import numpy as np
 
-
+#初始化paddleocr
+ocr = PaddleOCR(
+    lang="ch",       # 中文
+    use_angle_cls=True,
+    show_log=False
+)
 # ==============================
 # 1 Tesseract路径
 # ==============================
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\MSWBID\python\projects\tesseract-ocr\tesseract.exe"
 filepath=r"C:\MSWBID\python\projects\wxbot\history.json" #对话历史
 
 # ==============================
 # 2 获取微信窗口
 # ==============================
+
+# 获取所有窗口对象
+def get_all_windows_title():#获取所有窗口的标题
+    all_windows = gw.getAllWindows()
+
+    print(f"当前共检测到 {len(all_windows)} 个窗口：\n")
+
+    # for win in all_windows:
+    #     # 过滤掉标题为空的窗口（很多后台系统小组件标题为空）
+    #     if win.title:
+    #         print(f"- 标题: {win.title}")
+    #         # 如果你想看更多信息，可以取消下面这行的注释
+    #         print(f"  位置: ({win.left}, {win.top}), 尺寸: {win.width}x{win.height}")
+    return all_windows
+
+def find_windows(windows,target_window):#看看设定的目标窗口是否在已打开的窗口里面，返回T/F
+    match=0
+    for win in windows:
+        # 过滤掉标题为空的窗口（很多后台系统小组件标题为空）
+        if win.title:
+            if target_window in win.title:
+                match+=1
+    if match!=0:
+        return True
+    else:
+        return False
+
 def get_4mouse_position():
     time.sleep(3)
     positions=[]
@@ -67,29 +100,38 @@ def get_chat_region():
     chat_left = left + int(width * 0.3)
     chat_right = left + width
 
-    chat_top = top + int(height * 0.55)
-    chat_bottom = top + int(height)
+    chat_top = top + int(height * 0.6)
+    chat_bottom = top + int(height*0.8)
 
     return (chat_left, chat_top, chat_right, chat_bottom)
-
+def check_chat_region():#通过鼠标移动来查看聊天框位置
+    time.sleep(2)
+    pyautogui.moveTo(get_chat_region()[0], get_chat_region()[1], duration=1)
+    time.sleep(1)
+    pyautogui.moveTo(get_chat_region()[0], get_chat_region()[3], duration=1)
+    time.sleep(1)
+    pyautogui.moveTo(get_chat_region()[2], get_chat_region()[1], duration=1)
+    time.sleep(1)
+    pyautogui.moveTo(get_chat_region()[2], get_chat_region()[3], duration=1)
+    time.sleep(1)
 
 # ==============================
 # 4 获取最后消息坐标
 # ==============================
 
-def get_last_message_pos():
-
-    win = get_wechat_window()
-
-    left = win.left
-    top = win.top
-    width = win.width
-    height = win.height
-
-    x = left + int(width * 0.75)
-    y = top + int(height * 0.75)
-
-    return (x, y)
+# def get_last_message_pos():
+#
+#     win = get_wechat_window()
+#
+#     left = win.left
+#     top = win.top
+#     width = win.width
+#     height = win.height
+#
+#     x = left + int(width * 0.75)
+#     y = top + int(height * 0.75)
+#
+#     return (x, y)
 
 
 # ==============================
@@ -104,7 +146,8 @@ def capture_region():
         return None
 
     img = ImageGrab.grab(bbox=region)
-
+    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    # img.show()
     return img
 
 
@@ -113,14 +156,33 @@ def capture_region():
 # ==============================
 
 def ocr_image(img):
+    """
+    使用PaddleOCR识别图片并返回字符串
 
-    text = pytesseract.image_to_string(
-        img,
-        lang="chi_sim"
-    )
-    print(text)
-    return text.strip()
+    参数
+    -------
+    img : numpy.ndarray
+        OpenCV格式图片
 
+    返回
+    -------
+    str
+        识别到的文字
+    """
+
+    result = ocr.ocr(img)
+
+    if result[0] is None:
+        return ""
+
+    texts = []
+
+    for line in result[0]:
+
+        text = line[1][0]  # 识别到的文字
+        texts.append(text)
+    # print("\n".join(texts))
+    return "\n".join(texts)
 
 # ==============================
 # 7 复制消息
@@ -134,17 +196,18 @@ def copy_message():
 
     pyautogui.rightClick()
 
-    time.sleep(1)
+    time.sleep(0.2)
     pyautogui.moveRel(10,-40)
     pyautogui.leftClick()
-    time.sleep(1)
+    time.sleep(0.2)
     pyautogui.moveTo(1325, 786, duration=0.1)
     pyautogui.rightClick()
-    time.sleep(1)
+    time.sleep(0.2)
     pyautogui.moveRel(10, -40)
     pyautogui.leftClick()
     time.sleep(1)
-    # pyautogui.keyDown("esc")
+    if find_windows(get_all_windows_title(),"图片"):
+        pyautogui.keyDown("esc")
     return pyperclip.paste()
 
 
@@ -213,3 +276,5 @@ def rearrange_file(msg,depth):
 # ==============================
 if __name__ == "__main__":
     listen_loop(3)
+    # print(ocr_image(r"C:\Users\qingu\OneDrive\Pictures\Screenshots\231.png"))
+    # check_chat_region()

@@ -4,6 +4,7 @@ from PIL import ImageGrab
 import pyautogui
 import pygetwindow as gw
 import pyperclip
+import json
 
 
 # ==============================
@@ -11,11 +12,19 @@ import pyperclip
 # ==============================
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\MSWBID\python\projects\tesseract-ocr\tesseract.exe"
-
+filepath=r"C:\MSWBID\python\projects\wxbot\history.json" #对话历史
 
 # ==============================
 # 2 获取微信窗口
 # ==============================
+def get_4mouse_position():
+    time.sleep(3)
+    positions=[]
+    for i in range(4):
+        time.sleep(2)
+        positions.append(pyautogui.position())
+        print(positions[i],"record")
+    print(positions)
 
 def get_wechat_window():
 
@@ -56,10 +65,10 @@ def get_chat_region():
     """
 
     chat_left = left + int(width * 0.3)
-    chat_right = left + width - 20
+    chat_right = left + width
 
     chat_top = top + int(height * 0.55)
-    chat_bottom = top + int(height * 0.80)
+    chat_bottom = top + int(height)
 
     return (chat_left, chat_top, chat_right, chat_bottom)
 
@@ -109,7 +118,7 @@ def ocr_image(img):
         img,
         lang="chi_sim"
     )
-
+    print(text)
     return text.strip()
 
 
@@ -119,8 +128,8 @@ def ocr_image(img):
 
 def copy_message():
 
-    x, y = get_last_message_pos()
-
+    # x, y = get_last_message_pos()
+    time.sleep(1)
     pyautogui.moveTo(1812,782, duration=0.1)
 
     pyautogui.rightClick()
@@ -129,12 +138,13 @@ def copy_message():
     pyautogui.moveRel(10,-40)
     pyautogui.leftClick()
     time.sleep(1)
-    pyautogui.moveTo(1392, 781, duration=0.1)
+    pyautogui.moveTo(1325, 786, duration=0.1)
     pyautogui.rightClick()
     time.sleep(1)
     pyautogui.moveRel(10, -40)
     pyautogui.leftClick()
     time.sleep(1)
+    # pyautogui.keyDown("esc")
     return pyperclip.paste()
 
 
@@ -142,13 +152,14 @@ def copy_message():
 # 8 主循环
 # ==============================
 
-def listen_loop():
+def listen_loop(history_len):
 
     last_text = ""
 
     print("开始监听微信消息...")
 
     while True:
+        msg_history = read_file(filepath)
 
         img = capture_region()
 
@@ -165,20 +176,40 @@ def listen_loop():
             msg = copy_message()
 
             print("新消息:", msg)
-
+            try:
+                if msg!=msg_history[-1]:
+                    msg_history.append(msg)
+            except:
+                msg_history=[]
+                msg_history.append(msg)
             last_text = text
-
+            print("当前消息历史",msg_history)
+            write_file(filepath,rearrange_file(msg_history,history_len))
         time.sleep(0.5)
 
 
+def write_file(file_path,messages):
+    # 保存到文件
+    with open(file_path, "w+", encoding="utf-8") as f:
+        json.dump(messages, f, ensure_ascii=False)
+
+
+def read_file(file_path):
+    # 读取回列表
+    with open(file_path, "r", encoding="utf-8") as f:
+        loaded_messages = json.load(f)
+
+    return loaded_messages
+
+def rearrange_file(msg,depth):
+    while True:
+        if len(msg)>depth:
+            msg.pop(0)
+        else:
+            break
+    return msg
 # ==============================
 # 9 程序入口
 # ==============================
-
 if __name__ == "__main__":
-
-    listen_loop()
-
-# import pyautogui,time
-# time.sleep(3)
-# print(pyautogui.position())
+    listen_loop(3)

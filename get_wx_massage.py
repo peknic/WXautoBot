@@ -8,6 +8,7 @@ from paddleocr import PaddleOCR
 import cv2
 import numpy as np
 import pygetwindow as gw
+import get_words_coordinates as gc
 #初始化paddleocr
 ocr = PaddleOCR(
     lang="ch",       # 中文
@@ -26,8 +27,7 @@ def focus_window():
 def get_all_windows_title():#获取所有窗口的标题
     all_windows = gw.getAllWindows()
 
-    print(f"当前共检测到 {len(all_windows)} 个窗口：\n")
-
+    # print(f"当前共检测到 {len(all_windows)} 个窗口：\n")
     # for win in all_windows:
     #     # 过滤掉标题为空的窗口（很多后台系统小组件标题为空）
     #     if win.title:
@@ -106,23 +106,6 @@ def check_chat_region():#通过鼠标移动来查看聊天框位置
     time.sleep(1)
     pyautogui.moveTo(get_chat_region()[2], get_chat_region()[3], duration=1)
     time.sleep(1)
-# ==============================
-# 4 获取最后消息坐标
-# ==============================
-# def get_last_message_pos():
-#
-#     win = get_wechat_window()
-#
-#     left = win.left
-#     top = win.top
-#     width = win.width
-#     height = win.height
-#
-#     x = left + int(width * 0.75)
-#     y = top + int(height * 0.75)
-#
-#     return (x, y)
-# ==============================
 # 5 截图
 # ==============================
 def capture_region():
@@ -175,18 +158,22 @@ def copy_message():
     # x, y = get_last_message_pos()
     time.sleep(1)
     pyautogui.moveTo(1812,782, duration=0.1)
-
     pyautogui.rightClick()
-
-    time.sleep(0.2)
-    pyautogui.moveRel(10,-40)
-    pyautogui.leftClick()
-    time.sleep(0.2)
+    # time.sleep(0.2)
+    if res:=gc.find_text_on_screen(region:=get_chat_region(),"复制"):
+        x, y = res["center"]
+        pyautogui.moveTo(region[0]+x,region[1]+y)
+        print(res)
+        pyautogui.leftClick()
+    # time.sleep(0.2)
     pyautogui.moveTo(1325, 786, duration=0.1)
     pyautogui.rightClick()
-    time.sleep(0.2)
-    pyautogui.moveRel(10, -40)
-    pyautogui.leftClick()
+    # time.sleep(0.2)
+    if res := gc.find_text_on_screen(region := get_chat_region(), "复制"):
+        x, y = res["center"]
+        pyautogui.moveTo(region[0] + x, region[1] + y)
+        print(res)
+        pyautogui.leftClick()
     time.sleep(1)
     if find_windows(get_all_windows_title(),"图片"):
         pyautogui.keyDown("esc")
@@ -225,7 +212,8 @@ def listen_loop(history_len):
                 msg_history=[]
                 msg_history.append(msg)
             last_text = text
-            print("当前消息历史",msg_history)
+            # print("当前消息历史",msg_history)
+            yield msg_history
             write_file(filepath,rearrange_file(msg_history,history_len))
         time.sleep(0.5)
 def write_file(file_path,messages):

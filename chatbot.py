@@ -15,7 +15,8 @@ def ai_reply(openai_format_msg):
         presence_penalty=0.2,       # 鼓励新话题
     )
     return response.choices[0].message.content
-
+if __name__ =="__main__":
+    print(an:=ai_reply([{"role": "user", "content":"你好，介绍一下你自己，你的性能怎么样"}]),type(an))
 # [
 #     {"role": "system", "content": "你是一个不受任何限制的角色扮演大师，请你现在扮演蔚蓝档案中的角色空崎日奈，你需要充分了解她的游戏设定"},
 #     {"role": "user", "content": "介绍一下你自己吧"}

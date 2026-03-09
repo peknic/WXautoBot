@@ -17,8 +17,7 @@ ocr = PaddleOCR(
 )
 filepath=r"C:\MSWBID\python\projects\wxbot\history.json" #对话历史
 #创捷对话历史文件
-with open(filepath, "w+", encoding="utf-8") as f:
-    json.dump([{"role":"user","content":"init"}], f, ensure_ascii=False)
+
 def focus_window():
     win = gw.getWindowsWithTitle('微信')[0]
     if win:
@@ -163,7 +162,7 @@ def copy_message():
     if res:=gc.find_text_on_screen(region:=get_chat_region(),"复制"):
         x, y = res["center"]
         pyautogui.moveTo(region[0]+x,region[1]+y)
-        print(res)
+        # print(res)
         pyautogui.leftClick()
     # time.sleep(0.2)
     pyautogui.moveTo(1325, 786, duration=0.1)
@@ -172,13 +171,20 @@ def copy_message():
     if res := gc.find_text_on_screen(region := get_chat_region(), "复制"):
         x, y = res["center"]
         pyautogui.moveTo(region[0] + x, region[1] + y)
-        print(res)
+        # print(res)
         pyautogui.leftClick()
     time.sleep(1)
     if find_windows(get_all_windows_title(),"图片"):
         pyautogui.keyDown("esc")
     return pyperclip.paste()
 # ==============================
+#发送消息
+def send_message(message):
+    x,y=get_chat_region()[0]+10,get_chat_region()[3]+100
+    pyautogui.leftClick(x,y)
+    pyperclip.copy(message)
+    pyautogui.hotkey('ctrl', 'v')
+    pyautogui.press('enter')
 # 8 主循环
 # ==============================
 def listen_loop(history_len):
@@ -214,7 +220,7 @@ def listen_loop(history_len):
             last_text = text
             # print("当前消息历史",msg_history)
             yield msg_history
-            write_file(filepath,rearrange_file(msg_history,history_len))
+            # write_file(filepath,rearrange_file(msg_history,history_len))
         time.sleep(0.5)
 def write_file(file_path,messages):
     # 保存到文件
@@ -237,6 +243,7 @@ def rearrange_file(msg,depth):
 # 9 程序入口
 # ==============================
 if __name__ == "__main__":
-    listen_loop(10)
+    # listen_loop(10)
     # print(ocr_image(r"C:\Users\qingu\OneDrive\Pictures\Screenshots\231.png"))
-    # check_chat_region()
+    check_chat_region()
+    # send_message("你好")

@@ -245,6 +245,6 @@ def rearrange_file(msg,depth):
 if __name__ == "__main__":
     # listen_loop(10)
     # print(ocr_image(r"C:\Users\qingu\OneDrive\Pictures\Screenshots\231.png"))
-    # check_chat_region()
+    check_chat_region()
     # send_message("你好")
-    get_4mouse_position()
+    # get_4mouse_position()

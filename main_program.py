@@ -3,6 +3,7 @@ import chatbot
 import json
 history_len=10
 filepath=r"C:\MSWBID\python\projects\wxbot\history.json"
+reply_para=0
 try:
     get_wx_massage.read_file(filepath)
 except:
@@ -11,7 +12,7 @@ except:
 def ai_rw_reply_text (file_path,msg):
     msg_history = get_wx_massage.read_file(file_path)
     new_msg = msg
-    if "雪" in new_msg["content"]:
+    if reply_para==1:
         if new_msg != msg_history[-1] and msg_history[-1]["content"] != new_msg["content"]:
             msg_history.append(new_msg)
         print(msg_history)
@@ -26,5 +27,9 @@ def ai_rw_reply_text (file_path,msg):
         get_wx_massage.write_file(file_path, get_wx_massage.rearrange_file(msg_history, history_len))
 
 for msg in get_wx_massage.listen_loop(history_len):
+    if "雪" in msg["content"]:
+        reply_para=1
     ai_rw_reply_text(filepath,msg)
+    if "再见" in msg["content"]:
+        reply_para=0
 

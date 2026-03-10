@@ -194,7 +194,7 @@ def listen_loop(history_len):
     print("开始监听微信消息...")
     focus_window()
     while True:
-        msg_history = read_file(filepath)
+        # msg_history = read_file(filepath)
 
         img = capture_region()
 
@@ -211,15 +211,15 @@ def listen_loop(history_len):
             msg = {"role":"user","content":copy_message()}
 
             print("新消息:", msg)
-            try:
-                if msg!=msg_history[-1]:
-                    msg_history.append(msg)
-            except:
-                msg_history=[]
-                msg_history.append(msg)
+            # try:
+            #     if msg!=msg_history[-1]:
+            #         msg_history.append(msg)
+            # except:
+            #     msg_history=[]
+            #     msg_history.append(msg)
             last_text = text
             # print("当前消息历史",msg_history)
-            yield msg_history
+            yield msg
             # write_file(filepath,rearrange_file(msg_history,history_len))
         time.sleep(0.5)
 def write_file(file_path,messages):

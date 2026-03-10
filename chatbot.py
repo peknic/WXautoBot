@@ -6,7 +6,7 @@ def ai_reply(openai_format_msg):
     )
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.1-8b-instant",
         messages=openai_format_msg,
         temperature=0.65,            # 控制创造性
         max_tokens=500,             # 最大输出 token 数
